@@ -1,0 +1,4 @@
+C:/Users/ngoqh/CLionProjects/FTP Server v2/cmake-build-debug/CMakeFiles/Lib.dir
+C:/Users/ngoqh/CLionProjects/FTP Server v2/cmake-build-debug/CMakeFiles/FTP_Server_v2.dir
+C:/Users/ngoqh/CLionProjects/FTP Server v2/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/ngoqh/CLionProjects/FTP Server v2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
