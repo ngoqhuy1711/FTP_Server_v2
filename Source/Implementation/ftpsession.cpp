@@ -15,14 +15,17 @@ FTPSession::FTPSession(const TcpSocket &slave, ServerConfig *conf): Session(slav
     this->quitSession = false;
     this->sessionInfo->status = STATUS_INIT;
 }
+
 void FTPSession::reset() {
     this->sessionInfo->status = STATUS_INIT;
     this->sessionInfo->username.clear();
     this->sessionInfo->password.clear();
 }
+
 FTPSession::~FTPSession() {
     delete sessionInfo;
 }
+
 void FTPSession::doUSER(string cmd_argv[], int cmd_argc) {
     if (cmd_argc < 2) {
         response = "501 Cần thêm tham số.\r\n";
@@ -40,6 +43,7 @@ void FTPSession::doUSER(string cmd_argv[], int cmd_argc) {
         slave.send(response.c_str(), response.length());
     }
 }
+
 void FTPSession::doPASS(string cmd_argv[], int cmd_argc) {
     if (cmd_argc < 2) {
         response = "501 Cần thêm tham số.\r\n";
@@ -56,28 +60,28 @@ void FTPSession::doPASS(string cmd_argv[], int cmd_argc) {
         slave.send(response.c_str(), response.length());
     }
 }
+
 void FTPSession::doMKD(string cmd_argv[], int cmd_argc) {
-
 }
+
 void FTPSession::doCWD(string cmd_argv[], int cmd_argc) {
-
 }
+
 void FTPSession::doRMD(string cmd_argv[], int cmd_argc) {
-
 }
+
 void FTPSession::doPORT(string cmd_argv[], int cmd_argc) {
-
 }
+
 void FTPSession::doRETR(string cmd_argv[], int cmd_argc) {
-
 }
+
 void FTPSession::doSTOR(string cmd_argv[], int cmd_argc) {
-
 }
+
 void FTPSession::doQUIT(string cmd_argv[], int cmd_argc) {
-
 }
-void FTPSession::doUnknown(string cmd_argv[], int cmd_argc) {
 
+void FTPSession::doUnknown(string cmd_argv[], int cmd_argc) {
 }
 
