@@ -11,141 +11,113 @@
 
 #define _CONCURRENT_MT_SERVER_
 
-TCPServer::TCPServer(unsigned short localPort)
-{
+TCPServer::TCPServer(unsigned short localPort) {
     this->port = localPort;
     running = false;
     autoStart = false;
     this->numCmd = 0;
 }
 
-TCPServer::~TCPServer()
-{
+TCPServer::~TCPServer() {
 }
 
-void TCPServer::initCmd()
-{
-
+void TCPServer::initCmd() {
 }
 
-bool TCPServer::configServer()
-{
+bool TCPServer::configServer() {
     return true;
 }
 
-bool TCPServer::loadServerConfig(const string& confFileName)
-{
+bool TCPServer::loadServerConfig(const string &confFileName) {
     return true;
 }
 
-void TCPServer::addCmd(const string& cmdName, CMD_FUNC f)
-{
-    this->cmdDoFunc[this->numCmd]=f;
+void TCPServer::addCmd(const string &cmdName, CMD_FUNC f) {
+    this->cmdDoFunc[this->numCmd] = f;
     this->cmdNameList[this->numCmd] = cmdName;
     this->numCmd++;
 }
 
-void TCPServer::doCmd(Session* session, uint8_t cmdId, string cmd_argv[], int cmd_argc)
-{
-    if(cmdId == SERVER_CMD_UNKNOWN)
+void TCPServer::doCmd(Session *session, uint8_t cmdId, string cmd_argv[], int cmd_argc) {
+    if (cmdId == SERVER_CMD_UNKNOWN)
         session->doUnknown(cmd_argv, cmd_argc);
-    else
-    {
+    else {
         CMD_FUNC f = this->cmdDoFunc[cmdId];
-        if(f!=NULL&&session!=NULL)
-            (session->*f)(cmd_argv, cmd_argc);  // call with member function pointer
+        if (f != NULL && session != NULL)
+            (session->*f)(cmd_argv, cmd_argc); // call with member function pointer
     }
 }
 
-bool TCPServer::start()
-{
-    try
-    {
+bool TCPServer::start() {
+    try {
         this->master.setListen(this->port);
         running = true;
         // create a thread to run TCPServer::run
-        std::thread t(&TCPServer::run,this);
+        std::thread t(&TCPServer::run, this);
         t.detach();
         return running;
         //this->run();
-    }
-    catch(SocketException& e)
-    {
+    } catch (SocketException &e) {
         cerr << e.what() << endl;
         return false;
     }
 }
-void TCPServer::stop()
-{
+
+void TCPServer::stop() {
     running = false;
     master.close();
 }
 
-bool TCPServer::restart()
-{
+bool TCPServer::restart() {
     master.close();
     running = false;
-    try
-    {
+    try {
         master.setListen(this->port);
         running = true;
         // create a thread to run TCPServer::run
 
-        std::thread t(&TCPServer::run,this);
+        std::thread t(&TCPServer::run, this);
         t.detach();
         return true;
-
-    }
-    catch(SocketException& e)
-    {
+    } catch (SocketException &e) {
         cerr << e.what() << endl;
         return false;
     }
 }
 
-bool TCPServer::isRunning()
-{
+bool TCPServer::isRunning() {
     return this->running;
 }
 
 
-void TCPServer::run()
-{
+void TCPServer::run() {
     TcpSocket slave;
-    while(running) // vong lap xu ly cua server
+    while (running) // vong lap xu ly cua server
     {
         // chap nhan ket noi tu client
-        try
-        {
+        try {
             slave = master.accept();
             int timeout = conf->getTimeout();
-            if(timeout)
-            {
+            if (timeout) {
                 slave.setTimeOut(timeout);
             }
-        }
-        catch(SocketException& e)
-        {
-            if(!running)
+        } catch (SocketException &e) {
+            if (!running)
                 return;
             cerr << e.what() << endl;
             continue;
         }
         // Create a thread and add to ThreadPool
-        try
-        {
+        try {
 #ifdef _CONCURRENT_MT_SERVER_
-            std::thread t(&TCPServer::startNewSession,this,slave);
+            std::thread t(&TCPServer::startNewSession, this, slave);
             t.detach();
 #else
             this->startNewSession(slave);
 #endif // _CONCURRENCE_H*/
+        } catch (exception &e) {
+            cerr << "Khong tao duoc thread thuc hien Session\n";
         }
-        catch (exception& e)
-        {
-            cerr << "Khong tao duoc thread thuc hien Session\n" ;
-        }
-
     }
 }
 
