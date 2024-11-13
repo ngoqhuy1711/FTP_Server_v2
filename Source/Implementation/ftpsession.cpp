@@ -17,17 +17,44 @@ FTPSession::FTPSession(const TcpSocket &slave, ServerConfig *conf): Session(slav
 }
 void FTPSession::reset() {
     this->sessionInfo->status = STATUS_INIT;
-    this->sessionInfo->fromAddress.clear();
-    this->sessionInfo->toAddress.clear();
+    this->sessionInfo->username.clear();
+    this->sessionInfo->password.clear();
 }
 FTPSession::~FTPSession() {
     delete sessionInfo;
 }
 void FTPSession::doUSER(string cmd_argv[], int cmd_argc) {
-
+    if (cmd_argc < 2) {
+        response = "501 Cần thêm tham số.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    string username = cmd_argv[1];
+    if (conf->isValidUser(cmd_argv[1])) {
+        sessionInfo->username = username;
+        sessionInfo->status = STATUS_USER;
+        response = "331 Mật khẩu cần thiết.\r\n";
+        slave.send(response.c_str(), response.length());
+    } else {
+        response = "530 Tên người dùng không hợp lệ.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
 }
 void FTPSession::doPASS(string cmd_argv[], int cmd_argc) {
-
+    if (cmd_argc < 2) {
+        response = "501 Cần thêm tham số.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    string password = cmd_argv[1];
+    if (conf->authenticate(sessionInfo->username, password)) {
+        sessionInfo->status = STATUS_PASS;
+        response = "230 Đăng nhập thành công.\r\n";
+        slave.send(response.c_str(), response.length());
+    } else {
+        response = "530 Mật khẩu không hợp lệ.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
 }
 void FTPSession::doMKD(string cmd_argv[], int cmd_argc) {
 

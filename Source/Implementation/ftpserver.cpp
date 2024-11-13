@@ -7,8 +7,8 @@
 #include <cstring>
 #include "ftpserver.h"
 
-const char FTP_CONF_FILE_NAME[] = "ftp.conf";
-const char FTP_ACCOUNT_FILE_NAME[] = "ftpaccount.conf";
+const char FTP_CONF_FILE_NAME[] = "ftp.txt";
+const char FTP_ACCOUNT_FILE_NAME[] = "ftpaccount.txt";
 
 const char FTP_DELIMITER[] = " ";
 const char EOL[] = "'\r\n";

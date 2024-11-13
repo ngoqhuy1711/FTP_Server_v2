@@ -5,6 +5,7 @@
 #include "ftpserverconfig.h"
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 FTPAccount::FTPAccount() {
 }
@@ -30,17 +31,21 @@ bool FTPServerConfig::loadAccountsFromFile(const string &fileName) {
     if (!file.good()) {
         std::cerr << "Lỗi: Không thể lấy danh sách tài khoản." << std::endl;
         return false;
-    } else {
-        string stringLine;
-        while (!file.eof()) {
-            getline(file, stringLine);
-            if (!stringLine.empty()) {
+    }
+    string stringLine;
+    while (!file.eof()) {
+        getline(file, stringLine);
+        if (!stringLine.empty()) {
+            istringstream iss(stringLine);
+            string username, password;
+            if (iss >> username >> password) {
                 FTPAccount *account = new FTPAccount();
-                account->setUserName(stringLine);
+                account->setUserName(username);
+                account->setPassword(password);
                 addAccount(account);
             }
         }
-        file.close();
-        return true;
     }
+    file.close();
+    return true;
 }

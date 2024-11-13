@@ -11,8 +11,8 @@
 #include "session.h"
 
 #define STATUS_INIT 0
-#define STATUS_FROM 1
-#define STATUS_TO 2
+#define STATUS_USER 1
+#define STATUS_PASS 2
 
 #define USER "USER"
 #define PASS "PASS"
@@ -29,8 +29,8 @@
 
 struct FTPSessionInfo {
     uint8_t status;
-    string fromAddress;
-    string toAddress;
+    string username;
+    string password;
 };
 
 class FTPSession : public Session {
