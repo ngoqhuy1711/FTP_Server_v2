@@ -68,7 +68,7 @@ void FTPServer::initCmd() {
     addCmd(RMD, FUNC_CAST(&FTPSession::doRMD));
     addCmd(PORT, FUNC_CAST(&FTPSession::doPORT));
     addCmd(RETR, FUNC_CAST(&FTPSession::doRETR));
-    addCmd(STOR, FUNC_CAST(&FTPSession::doSTOR));
+    addCmd(DELE, FUNC_CAST(&FTPSession::doDELE));
     addCmd(QUIT, FUNC_CAST(&FTPSession::doQUIT));
 }
 

@@ -21,7 +21,7 @@
 #define RMD "RMD"
 #define PORT "PORT"
 #define RETR "RETR"
-#define STOR "STOR"
+#define DELE "DELE"
 
 #ifndef QUIT
 #define QUIT "QUIT"
@@ -66,7 +66,7 @@ public:
 
     void doRETR(string cmd_argv[], int cmd_argc);
 
-    void doSTOR(string cmd_argv[], int cmd_argc);
+    void doDELE(string cmd_argv[], int cmd_argc);
 
     void doQUIT(string cmd_argv[], int cmd_argc);
 
