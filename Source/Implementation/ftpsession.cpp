@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include "ftpsession.h"
+#include <direct.h>
 
 #include <sstream>
 
@@ -72,11 +73,20 @@ void FTPSession::doMKD(string cmd_argv[], int cmd_argc) {
         slave.send(response.c_str(), response.length());
         return;
     }
-    if (sessionInfo->status == STATUS_PASS) {
-    } else {
+    if (sessionInfo->status != STATUS_PASS) {
         response = "530 Cần đăng nhập trước.\r\n";
         slave.send(response.c_str(), response.length());
+        return;
     }
+    string dir = cmd_argv[1];
+    if (mkdir(dir.c_str()) == 0) {
+        response = "257 Tạo thư mục thành công.\r\n";
+        slave.send(response.c_str(), response.length());
+    } else {
+        response = "550 Tạo thư mục thất bại.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
+
 }
 
 void FTPSession::doCWD(string cmd_argv[], int cmd_argc) {
@@ -86,6 +96,25 @@ void FTPSession::doRMD(string cmd_argv[], int cmd_argc) {
 }
 
 void FTPSession::doPORT(string cmd_argv[], int cmd_argc) {
+    if (cmd_argc < 2) {
+        response = "501 Cần thêm tham số.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
+    if (sessionInfo->status != STATUS_PASS) {
+        response = "530 Cần đăng nhập trước.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
+    string portInfo = cmd_argv[1];
+    std::replace(portInfo.begin(), portInfo.end(), ',', ' ');
+    std::istringstream iss(portInfo);
+    int h1, h2, h3, h4, p1, p2;
+    iss >> h1 >> h2 >> h3 >> h4 >> p1 >> p2;
+    string ip = std::to_string(h1) + "." + std::to_string(h2) + "." + std::to_string(h3) + "." + std::to_string(h4);
+    unsigned short port = p1 * 256 + p2;
+    sessionInfo->dataIpAddress = ip;
+    sessionInfo->dataPort = port;
+    response = "200 Mở cổng " + ip + ":" + std::to_string(port) + "thành công.\r\n";
+    slave.send(response.c_str(), response.length());
 }
 
 void FTPSession::doRETR(string cmd_argv[], int cmd_argc) {

@@ -31,6 +31,8 @@ struct FTPSessionInfo {
     uint8_t status;
     string username;
     string password;
+    string dataIpAddress;
+    unsigned short dataPort;
 };
 
 class FTPSession : public Session {
