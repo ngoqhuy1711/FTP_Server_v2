@@ -4,11 +4,12 @@
 
 #ifndef FTPSERVER_H
 #define FTPSERVER_H
-#include "tcpserver.h"
-#include "ftpsession.h"
 #include "ftpserverconfig.h"
+#include "ftpsession.h"
+#include "tcpserver.h"
 
-class FTPServer : public TCPServer {
+class FTPServer : public TCPServer
+{
 public:
     FTPServer(unsigned short port = 21);
 
@@ -19,7 +20,8 @@ public:
 protected:
     void cleanServer();
 
-    FTPServerConfig *getServerConfig() {
+    FTPServerConfig *getServerConfig()
+    {
         return (FTPServerConfig *) conf;
     }
 
@@ -34,4 +36,4 @@ private:
 
     unsigned short parseCmd(const string &cmdLine, string cmd_argv[], int &cmd_argc);
 };
-#endif //FTPSERVER_H
+#endif // FTPSERVER_H

@@ -4,15 +4,16 @@
 
 #ifndef FTPSESSION_H_INCLUDED
 #define FTPSESSION_H_INCLUDED
-#include <cstdint>
-#include <vector>
-#include "tcpserversocket.h"
 #include "ftpserverconfig.h"
 #include "session.h"
+#include "tcpserversocket.h"
+#include <cstdint>
+#include <vector>
 
 #define STATUS_INIT 0
 #define STATUS_USER 1
 #define STATUS_PASS 2
+#define STATUS_OPEN_PORT 3
 
 #define USER "USER"
 #define PASS "PASS"
@@ -22,12 +23,19 @@
 #define PORT "PORT"
 #define RETR "RETR"
 #define DELE "DELE"
+#define QUIT "QUIT"
+#define SYST "SYST"
+#define FEAT "FEAT"
+#define PWD "PWD"
+#define TYPE "TYPE"
+#define LIST "LIST"
 
 #ifndef QUIT
 #define QUIT "QUIT"
 #endif
 
-struct FTPSessionInfo {
+struct FTPSessionInfo
+{
     uint8_t status;
     string username;
     string password;
@@ -35,13 +43,15 @@ struct FTPSessionInfo {
     unsigned short dataPort;
 };
 
-class FTPSession : public Session {
+class FTPSession : public Session
+{
     FTPSessionInfo *sessionInfo;
     string response;
 
     void reset() override;
 
-    FTPServerConfig *getServerConfig() const {
+    FTPServerConfig *getServerConfig() const
+    {
         return (FTPServerConfig *) conf;
     };
 
@@ -50,7 +60,8 @@ public:
 
     ~FTPSession();
 
-    const string &getResponse() const {
+    const string &getResponse() const
+    {
         return response;
     };
 
@@ -72,7 +83,14 @@ public:
 
     void doQUIT(string cmd_argv[], int cmd_argc);
 
+    void doSYST(string cmd_argv[], int cmd_argc);
+
+    void doFEAT(string cmd_argv[], int cmd_argc);
+
+    void doPWD(string cmd_argv[], int cmd_argc);
+    void doTYPE(string cmd_argv[], int cmd_argc);
+    void doLIST(string cmd_argv[], int cmd_argc);
     void doUnknown(string cmd_argv[], int cmd_argc) override;
 };
 
-#endif //FTPSESSION_H
+#endif // FTPSESSION_H

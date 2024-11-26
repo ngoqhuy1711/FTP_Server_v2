@@ -28,7 +28,6 @@ public:
 
     bool loadAccountsFromFile(const string &fileName) override;
 
-    bool isValidUser(const string &userName);
 };
 
 
