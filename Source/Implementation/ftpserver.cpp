@@ -22,7 +22,7 @@ FTPServer::FTPServer(unsigned short port) : TCPServer(port)
     conf = new FTPServerConfig();
 }
 
-bool FTPServer::loadServerConfig(const string &confFileName)
+bool FTPServer::loadServerConfig(const string& confFileName)
 {
     ifstream file(confFileName, ios::in);
     if (!file.good())
@@ -90,9 +90,10 @@ void FTPServer::initCmd()
     addCmd(PWD, FUNC_CAST(&FTPSession::doPWD));
     addCmd(TYPE, FUNC_CAST(&FTPSession::doTYPE));
     addCmd(LIST, FUNC_CAST(&FTPSession::doLIST));
+    addCmd(CDUP, FUNC_CAST(&FTPSession::doCDUP));
 }
 
-int FTPServer::readCmd(TcpSocket &slave, string &cmdLine)
+int FTPServer::readCmd(TcpSocket& slave, string& cmdLine)
 {
     try
     {
@@ -105,14 +106,14 @@ int FTPServer::readCmd(TcpSocket &slave, string &cmdLine)
         }
         return byteRead;
     }
-    catch (SocketException &e)
+    catch (SocketException& e)
     {
         std::cerr << "Lỗi: " << e.what() << std::endl;
         return -1;
     }
 }
 
-unsigned short FTPServer::parseCmd(const string &cmdLine, string cmd_argv[], int &cmd_argc)
+unsigned short FTPServer::parseCmd(const string& cmdLine, string cmd_argv[], int& cmd_argc)
 {
     cmd_argc = 0;
     cmd_argv[cmd_argc].clear();
@@ -137,7 +138,7 @@ unsigned short FTPServer::parseCmd(const string &cmdLine, string cmd_argv[], int
 
 void FTPServer::startNewSession(TcpSocket slave)
 {
-    FTPSession *session = new FTPSession(slave, conf);
+    FTPSession* session = new FTPSession(slave, conf);
     string cmdLine;
     string cmdArgv[SERVER_CMD_ARG_NUM];
     int cmdArgc;
@@ -174,7 +175,7 @@ void FTPServer::startNewSession(TcpSocket slave)
         }
         delete session;
     }
-    catch (SocketException &e)
+    catch (SocketException& e)
     {
         std::cerr << "Lỗi: " << e.what() << std::endl;
         delete session;

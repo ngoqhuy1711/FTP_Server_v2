@@ -7,39 +7,50 @@
 #include <iostream>
 #include <sstream>
 
-FTPAccount::FTPAccount() {
+FTPAccount::FTPAccount()
+{
 }
 
-FTPAccount::FTPAccount(string username): Account(username) {
+FTPAccount::FTPAccount(string username): Account(username)
+{
 }
 
-FTPAccount::~FTPAccount() {
+FTPAccount::~FTPAccount()
+{
 }
 
-FTPServerConfig::FTPServerConfig() {
+FTPServerConfig::FTPServerConfig()
+{
 }
 
-FTPServerConfig::~FTPServerConfig() {
+FTPServerConfig::~FTPServerConfig()
+{
 }
 
-string FTPAccount::getUserName() const {
+string FTPAccount::getUserName() const
+{
     return this->username;
 }
 
-bool FTPServerConfig::loadAccountsFromFile(const string &fileName) {
+bool FTPServerConfig::loadAccountsFromFile(const string& fileName)
+{
     ifstream file(fileName, ios::in);
-    if (!file.good()) {
+    if (!file.good())
+    {
         std::cerr << "Lỗi: Không thể lấy danh sách tài khoản." << std::endl;
         return false;
     }
     string stringLine;
-    while (!file.eof()) {
+    while (!file.eof())
+    {
         getline(file, stringLine);
-        if (!stringLine.empty()) {
+        if (!stringLine.empty())
+        {
             istringstream iss(stringLine);
             string username, password;
-            if (iss >> username >> password) {
-                FTPAccount *account = new FTPAccount();
+            if (iss >> username >> password)
+            {
+                FTPAccount* account = new FTPAccount();
                 account->setUserName(username);
                 account->setPassword(password);
                 addAccount(account);

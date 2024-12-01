@@ -20,20 +20,20 @@ public:
 protected:
     void cleanServer();
 
-    FTPServerConfig *getServerConfig()
+    FTPServerConfig* getServerConfig()
     {
-        return (FTPServerConfig *) conf;
+        return (FTPServerConfig*)conf;
     }
 
-    bool loadServerConfig(const string &confFileName) override;
+    bool loadServerConfig(const string& confFileName) override;
 
     void startNewSession(TcpSocket slave) override;
 
     void initCmd() override;
 
 private:
-    int readCmd(TcpSocket &slave, string &cmdLine);
+    int readCmd(TcpSocket& slave, string& cmdLine);
 
-    unsigned short parseCmd(const string &cmdLine, string cmd_argv[], int &cmd_argc);
+    unsigned short parseCmd(const string& cmdLine, string cmd_argv[], int& cmd_argc);
 };
 #endif // FTPSERVER_H

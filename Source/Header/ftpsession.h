@@ -13,7 +13,6 @@
 #define STATUS_INIT 0
 #define STATUS_USER 1
 #define STATUS_PASS 2
-#define STATUS_OPEN_PORT 3
 
 #define USER "USER"
 #define PASS "PASS"
@@ -29,6 +28,7 @@
 #define PWD "PWD"
 #define TYPE "TYPE"
 #define LIST "LIST"
+#define CDUP "CDUP"
 
 #ifndef QUIT
 #define QUIT "QUIT"
@@ -45,22 +45,22 @@ struct FTPSessionInfo
 
 class FTPSession : public Session
 {
-    FTPSessionInfo *sessionInfo;
+    FTPSessionInfo* sessionInfo;
     string response;
 
     void reset() override;
 
-    FTPServerConfig *getServerConfig() const
+    FTPServerConfig* getServerConfig() const
     {
-        return (FTPServerConfig *) conf;
+        return (FTPServerConfig*)conf;
     };
 
 public:
-    FTPSession(const TcpSocket &slave, ServerConfig *conf);
+    FTPSession(const TcpSocket& slave, ServerConfig* conf);
 
     ~FTPSession();
 
-    const string &getResponse() const
+    const string& getResponse() const
     {
         return response;
     };
@@ -88,8 +88,13 @@ public:
     void doFEAT(string cmd_argv[], int cmd_argc);
 
     void doPWD(string cmd_argv[], int cmd_argc);
+
     void doTYPE(string cmd_argv[], int cmd_argc);
+
     void doLIST(string cmd_argv[], int cmd_argc);
+
+    void doCDUP(string cmd_argv[], int cmd_argc);
+
     void doUnknown(string cmd_argv[], int cmd_argc) override;
 };
 

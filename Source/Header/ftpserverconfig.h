@@ -7,7 +7,8 @@
 #include "serverconfig.h"
 
 
-class FTPAccount : public Account {
+class FTPAccount : public Account
+{
 private:
 public:
     FTPAccount();
@@ -19,15 +20,15 @@ public:
     string getUserName() const;
 };
 
-class FTPServerConfig : public ServerConfig {
+class FTPServerConfig : public ServerConfig
+{
 private:
 public:
     FTPServerConfig();
 
     ~FTPServerConfig();
 
-    bool loadAccountsFromFile(const string &fileName) override;
-
+    bool loadAccountsFromFile(const string& fileName) override;
 };
 
 

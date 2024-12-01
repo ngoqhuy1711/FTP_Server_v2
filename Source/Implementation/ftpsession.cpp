@@ -7,12 +7,13 @@
 #include <direct.h>
 #include <fstream>
 #include <iostream>
-
+#include <io.h>
+#include <sys/stat.h>
 #include <sstream>
 
 #include "ftpserverconfig.h"
 
-FTPSession::FTPSession(const TcpSocket &slave, ServerConfig *conf) : Session(slave, conf)
+FTPSession::FTPSession(const TcpSocket& slave, ServerConfig* conf) : Session(slave, conf)
 {
     this->sessionInfo = new FTPSessionInfo();
     this->quitSession = false;
@@ -108,10 +109,86 @@ void FTPSession::doMKD(string cmd_argv[], int cmd_argc)
 
 void FTPSession::doCWD(string cmd_argv[], int cmd_argc)
 {
+    if (cmd_argc < 2)
+    {
+        response = "501 Cần thêm tham số.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    if (sessionInfo->status != STATUS_PASS)
+    {
+        response = "530 Cần đăng nhập trước.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    string dir = cmd_argv[1];
+    if (_chdir(dir.c_str()) == 0)
+    {
+        response = "250 Đã thay đổi thư mục.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
+    else
+    {
+        response = "550 Thay đổi thư mục thất bại.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
 }
 
 void FTPSession::doRMD(string cmd_argv[], int cmd_argc)
 {
+    if (cmd_argc < 2)
+    {
+        response = "501 Cần thêm tham số.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    if (sessionInfo->status != STATUS_PASS)
+    {
+        response = "530 Cần đăng nhập trước.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    string dir = cmd_argv[1];
+    struct _finddata_t fileinfo;
+    intptr_t handle = _findfirst((dir + "\\*").c_str(), &fileinfo);
+
+    if (handle == -1)
+    {
+        response = "550 Thư mục không tồn tại.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+
+    bool isEmpty = true;
+    do
+    {
+        if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
+        {
+            isEmpty = false;
+            break;
+        }
+    }
+    while (_findnext(handle, &fileinfo) == 0);
+
+    _findclose(handle);
+
+    if (!isEmpty)
+    {
+        response = "550 Thư mục không rỗng.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+
+    if (_rmdir(dir.c_str()) == 0)
+    {
+        response = "250 Xóa thư mục thành công.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
+    else
+    {
+        response = "550 Xóa thư mục thất bại.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
 }
 
 void FTPSession::doPORT(string cmd_argv[], int cmd_argc)
@@ -125,6 +202,7 @@ void FTPSession::doPORT(string cmd_argv[], int cmd_argc)
     {
         response = "530 Cần đăng nhập trước.\r\n";
         slave.send(response.c_str(), response.length());
+        return;
     }
     string portInfo = cmd_argv[1];
     std::replace(portInfo.begin(), portInfo.end(), ',', ' ');
@@ -135,16 +213,81 @@ void FTPSession::doPORT(string cmd_argv[], int cmd_argc)
     unsigned short port = p1 * 256 + p2;
     sessionInfo->dataIpAddress = ip;
     sessionInfo->dataPort = port;
-    response = "200 Mở cổng " + ip + ":" + std::to_string(port) + "thành công.\r\n";
+    response = "200 Mở cổng " + ip + ":" + std::to_string(port) + " thành công.\r\n";
     slave.send(response.c_str(), response.length());
 }
 
 void FTPSession::doRETR(string cmd_argv[], int cmd_argc)
 {
+    if (cmd_argc < 2)
+    {
+        response = "501 Cần thêm tham số.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    if (sessionInfo->status != STATUS_PASS)
+    {
+        response = "530 Cần đăng nhập trước.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    string file = cmd_argv[1];
+    if (sessionInfo->dataIpAddress.empty() || sessionInfo->dataPort == 0)
+    {
+        response = "425 Không mở cổng dữ liệu.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    TcpSocket dataSocket;
+    dataSocket.connect(sessionInfo->dataIpAddress, sessionInfo->dataPort);
+    response = "150 Đang gửi file.\r\n";
+    slave.send(response.c_str(), response.length());
+    ifstream fileStream(file, ios::in | ios::binary);
+    if (!fileStream.is_open())
+    {
+        response = "550 Không thể mở file.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+
+    char buffer[1024];
+    while (fileStream.read(buffer, sizeof(buffer)) || fileStream.gcount() > 0)
+    {
+        dataSocket.send(buffer, fileStream.gcount());
+    }
+
+    fileStream.close();
+    dataSocket.close();
+
+    response = "226 Đã gửi xong file.\r\n";
+    slave.send(response.c_str(), response.length());
 }
 
 void FTPSession::doDELE(string cmd_argv[], int cmd_argc)
 {
+    if (cmd_argc < 2)
+    {
+        response = "501 Cần thêm tham số.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    if (sessionInfo->status != STATUS_PASS)
+    {
+        response = "530 Cần đăng nhập trước.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    string file = cmd_argv[1];
+    if (remove(file.c_str()) == 0)
+    {
+        response = "250 Xóa file thành công.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
+    else
+    {
+        response = "550 Xóa file thất bại.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
 }
 
 void FTPSession::doQUIT(string cmd_argv[], int cmd_argc)
@@ -257,6 +400,11 @@ void FTPSession::doTYPE(string cmd_argv[], int cmd_argc)
         response = "200 Chuyển sang chế độ nhị phân.\r\n";
         slave.send(response.c_str(), response.length());
     }
+    if (cmd_argv[1] == "A")
+    {
+        response = "200 Chuyển sang chế độ ASCII.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
     else
     {
         response = "504 Không hỗ trợ chế độ này.\r\n";
@@ -265,6 +413,75 @@ void FTPSession::doTYPE(string cmd_argv[], int cmd_argc)
 }
 
 void FTPSession::doLIST(string cmd_argv[], int cmd_argc)
+{
+    if (cmd_argc < 1)
+    {
+        response = "501 Cần thêm tham số.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    if (sessionInfo->status != STATUS_PASS)
+    {
+        response = "530 Cần đăng nhập trước.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    if (sessionInfo->dataIpAddress.empty() || sessionInfo->dataPort == 0)
+    {
+        response = "425 Không mở cổng dữ liệu.\r\n";
+        slave.send(response.c_str(), response.length());
+        return;
+    }
+    TcpSocket dataSocket;
+    dataSocket.connect(sessionInfo->dataIpAddress, sessionInfo->dataPort);
+    response = "150 Đang gửi danh sách thư mục.\r\n";
+    slave.send(response.c_str(), response.length());
+
+    char cwd[256];
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+    {
+        string searchPath = string(cwd) + "\\*";
+        struct _finddata_t fileinfo;
+        intptr_t handle = _findfirst(searchPath.c_str(), &fileinfo);
+
+        if (handle == -1)
+        {
+            response = "550 Lỗi.\r\n";
+            slave.send(response.c_str(), response.length());
+            return;
+        }
+
+        do
+        {
+            string entry;
+            if (fileinfo.attrib & _A_SUBDIR)
+            {
+                entry = "drwxr-xr-x 1 owner group " + to_string(fileinfo.size) + " Jan 01 00:00 " + fileinfo.name +
+                    "\r\n";
+            }
+            else
+            {
+                entry = "-rw-r--r-- 1 owner group " + to_string(fileinfo.size) + " Jan 01 00:00 " + fileinfo.name +
+                    "\r\n";
+            }
+            dataSocket.send(entry.c_str(), entry.length());
+        }
+        while (_findnext(handle, &fileinfo) == 0);
+
+        _findclose(handle);
+        response = "226 Đã gửi xong danh sách thư mục.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
+    else
+    {
+        response = "550 Lỗi khi lấy thư mục hiện tại.\r\n";
+        slave.send(response.c_str(), response.length());
+    }
+
+    dataSocket.close();
+}
+
+void FTPSession::doCDUP(string cmd_argv[], int cmd_argc)
 {
     if (cmd_argc < 1)
     {
@@ -278,46 +495,16 @@ void FTPSession::doLIST(string cmd_argv[], int cmd_argc)
         slave.send(response.c_str(), response.length());
         return;
     }
-    if (sessionInfo->dataIpAddress.empty() || sessionInfo->dataPort == 0)
+    if (_chdir("..") == 0)
     {
-        response = "425 Không mở cổng dữ liệu.\r\n";
-        slave.send(response.c_str(), response.length());
-        return;
-    }
-    TcpSocket dataSocket;
-
-    dataSocket.connect(sessionInfo->dataIpAddress, sessionInfo->dataPort);
-    response = "150 Đang gửi danh sách thư mục.\r\n";
-    slave.send(response.c_str(), response.length());
-    char cwd[256];
-    if (getcwd(cwd, sizeof(cwd)) != NULL)
-    {
-        string cmd = "dir " + string(cwd) + " /b";
-        FILE *pipe = _popen(cmd.c_str(), "r");
-        if (!pipe)
-        {
-            response = "550 Lỗi.\r\n";
-            slave.send(response.c_str(), response.length());
-            return;
-        }
-
-        char buffer[128];
-        while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-        {
-            dataSocket.send(buffer, strlen(buffer));
-        }
-        _pclose(pipe);
-
-        response = "226 Đã gửi xong danh sách thư mục.\r\n";
+        response = "250 Đã thay đổi thư mục.\r\n";
         slave.send(response.c_str(), response.length());
     }
     else
     {
-        response = "550 Lỗi.\r\n";
+        response = "550 Thay đổi thư mục thất bại.\r\n";
         slave.send(response.c_str(), response.length());
     }
-
-    dataSocket.close();
 }
 
 void FTPSession::doUnknown(string cmd_argv[], int cmd_argc)

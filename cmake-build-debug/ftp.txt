@@ -1,2 +1,2 @@
 port=21
-conn-timeout=60
+conn-timeout=6000
