@@ -1,6 +1,6 @@
 #include "ftpservercli.h"
 
-int main(int argc, char *argv[]) {
+int main() {
     FTPServerCLI cli;
     cli.run();
     return 0;
